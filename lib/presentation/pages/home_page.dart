@@ -14,13 +14,13 @@ class _HomePageState extends State<HomePage> {
   String flag = AppState().selectedFlag;
 
   final cities = [
-    {'name': 'Concórdia', 'flag': 'flags/concordia.jpg'},
-    {'name': 'Seara', 'flag': 'flags/seara.jpg'},
-    {'name': 'Ipumirim', 'flag': 'flags/ipumirim.jpg'},
-    {'name': 'Arabutâ', 'flag': 'flags/arabuta.jpg'},
-    {'name': 'Irani', 'flag': 'flags/irani.jpg'},
-    {'name': 'Xanxerê', 'flag': 'flags/xanxere.jpg'},
-    {'name': 'Chapecó', 'flag': 'flags/chapeco.jpg'},
+    {'name': 'Concórdia', 'flag': 'assets/flags/concordia.jpg'},
+    {'name': 'Seara', 'flag': 'assets/flags/seara.jpg'},
+    {'name': 'Ipumirim', 'flag': 'assets/flags/ipumirim.jpg'},
+    {'name': 'Arabutã', 'flag': 'assets/flags/arabuta.jpg'},
+    {'name': 'Irani', 'flag': 'assets/flags/irani.jpg'},
+    {'name': 'Xanxerê', 'flag': 'assets/flags/xanxere.jpg'},
+    {'name': 'Chapecó', 'flag': 'assets/flags/chapeco.jpg'},
   ];
 
   @override
@@ -29,10 +29,6 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Urban Issue Tracker',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-        ),
         leadingWidth: 120,
         leading: PopupMenuButton<Map<String, String>>(
           tooltip: 'Selecionar cidade',
@@ -79,7 +75,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
-            color: Colors.black87,
+            color: Colors.black,
             tooltip: 'Profile',
             onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
           ),
@@ -91,7 +87,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Image.asset('flags/concordia.jpg'),
+            Image.asset('assets/images/logo.png'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -112,6 +108,12 @@ class _HomePageState extends State<HomePage> {
                   Navigator.pushNamed(context, AppRoutes.reportIssue),
               icon: const Icon(Icons.report_problem_outlined),
               label: const Text('Relatar Problema'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () =>
+                  Navigator.pushNamed(context, AppRoutes.anonymousReport),
+              icon: const Icon(Icons.water_rounded),
+              label: const Text('Relatar Problema Anônimo'),
             ),
             ElevatedButton.icon(
               onPressed: () => Navigator.pushNamed(context, AppRoutes.map),

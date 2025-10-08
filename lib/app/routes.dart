@@ -1,7 +1,11 @@
+import 'package:app_hackaton/presentation/pages/relatarProblema_page.dart';
+import 'package:app_hackaton/presentation/pages/relatoAnonimo.dart';
+import 'package:app_hackaton/presentation/pages/status.dart';
 import 'package:flutter/material.dart';
 
 // Import your pages
-import '../presentation/pages/home/home_page.dart';
+import '../presentation/pages/home_page.dart';
+import 'package:app_hackaton/presentation/pages/map_page.dart';
 
 //import '../presentation/pages/profile/profile_page.dart';
 //import '../presentation/pages/report_issue/report_issue_page.dart';
@@ -20,10 +24,11 @@ class AppRoutes {
 
   static Map<String, WidgetBuilder> get routes => {
     home: (context) => const HomePage(),
+
     //profile: (context) => const ProfilePage(),
-    //reportIssue: (context) => const ReportIssuePage(),
-    //anonymousReport: (context) => const AnonymousReportPage(),
-    //map: (context) => const MapPage(),
-    //issueStatus: (context) => const IssueStatusPage(),
+    reportIssue: (context) => RelatarproblemaPage(),
+    anonymousReport: (context) => RelatoAnonimo(),
+    map: (context) => MapPage(),
+    issueStatus: (context) => StatusPage(),
   };
 }

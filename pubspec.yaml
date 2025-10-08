@@ -30,6 +30,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  image_picker: ^1.1.2
+  geolocator: ^14.0.2
+  flutter_map: ^8.2.2
+  location: ^5.0.0
+  latlong2: ^0.9.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -59,6 +64,7 @@ flutter:
     - assets/flags/chapeco.jpg
     - assets/flags/irani.jpg
     - assets/flags/arabuta.jpg
+    - assets/images/
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
