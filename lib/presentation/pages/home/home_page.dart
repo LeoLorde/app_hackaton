@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../app/routes.dart';
-import '../../../state/app_state.dart';
+import 'package:app_hackaton/app/routes.dart';
+import 'package:app_hackaton/state/app_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,6 +13,16 @@ class _HomePageState extends State<HomePage> {
   String city = AppState().selectedCity;
   String flag = AppState().selectedFlag;
 
+  final cities = [
+    {'name': 'concordia', 'flag': 'assets/flags/concordia.png'},
+    {'name': 'seara', 'flag': 'assets/flags/seara.png'},
+    {'name': 'ipumirim', 'flag': 'assets/flags/ipumirim.png'},
+    {'name': 'arabuta', 'flag': 'assets/flags/arabuta.png'},
+    {'name': 'irani', 'flag': 'assets/flags/irani.png'},
+    {'name': 'xanxere', 'flag': 'assets/flags/xanxere.png'},
+    {'name': 'chapeco', 'flag': 'assets/flags/chapeco.png'},
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,26 +33,36 @@ class _HomePageState extends State<HomePage> {
           'Urban Issue Tracker',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
         ),
-        leading: IconButton(
-          icon: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              flag,
-              width: 32,
-              height: 32,
-              fit: BoxFit.cover,
-            ),
+        leading: PopupMenuButton<Map<String, String>>(
+          tooltip: 'Selecionar cidade',
+          icon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(borderRadius: BorderRadius.circular(4)),
+              const SizedBox(width: 4),
+              FittedBox(
+                child: Image.asset(
+                  'assets/flags/$city.png',
+                  width: 25,
+                  height: 25,
+                ),
+              ),
+              const Icon(Icons.keyboard_arrow_down, color: Colors.black87),
+            ],
           ),
-          tooltip: 'Select City',
-          onPressed: () async {
-            // Navigate and wait for return
-            await Navigator.pushNamed(context, AppRoutes.selectCity);
-            // Refresh city and flag after return
+          onSelected: (cityItem) {
             setState(() {
-              city = AppState().selectedCity;
-              flag = AppState().selectedFlag;
+              city = cityItem['name']!;
+              AppState().selectedCity = city;
+              AppState().selectedFlag = flag;
             });
           },
+          itemBuilder: (context) => cities.map((cityItem) {
+            return PopupMenuItem<Map<String, String>>(
+              value: cityItem,
+              child: Text(cityItem['name']!),
+            );
+          }).toList(),
         ),
         actions: [
           IconButton(
@@ -59,18 +79,23 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 10),
-            Text(
-              'Current city: $city',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 8),
+                Text(
+                  city,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 30),
 
-            // Buttons
+            // Botões
             ElevatedButton.icon(
               onPressed: () =>
                   Navigator.pushNamed(context, AppRoutes.reportIssue),

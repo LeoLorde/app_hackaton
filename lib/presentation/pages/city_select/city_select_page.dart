@@ -7,7 +7,7 @@ class CitySelectPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cities = [
-      {'name': 'Concórdia', 'flag': 'assets/flags/concordia.png'},
+      {'name': 'concordia', 'flag': 'assets/flags/concordia.png'},
       {'name': 'Seara', 'flag': 'assets/flags/seara.png'},
       {'name': 'Ipumirim', 'flag': 'assets/flags/ipumirim.png'},
       {'name': 'Arabutã', 'flag': 'assets/flags/arabuta.png'},
@@ -17,9 +17,7 @@ class CitySelectPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Select Your City'),
-      ),
+      appBar: AppBar(title: const Text('Select Your City')),
       body: ListView.builder(
         itemCount: cities.length,
         itemBuilder: (context, index) {
