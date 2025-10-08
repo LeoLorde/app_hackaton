@@ -4,5 +4,5 @@ class AppState {
   AppState._internal();
 
   String selectedCity = 'Concordia';
-  String selectedFlag = 'assets/flags/concordia.png';
+  String selectedFlag = 'assets/flags/concordia.jpg';
 }

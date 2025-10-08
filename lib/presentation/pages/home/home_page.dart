@@ -14,13 +14,13 @@ class _HomePageState extends State<HomePage> {
   String flag = AppState().selectedFlag;
 
   final cities = [
-    {'name': 'concordia', 'flag': 'assets/flags/concordia.png'},
-    {'name': 'seara', 'flag': 'assets/flags/seara.png'},
-    {'name': 'ipumirim', 'flag': 'assets/flags/ipumirim.png'},
-    {'name': 'arabuta', 'flag': 'assets/flags/arabuta.png'},
-    {'name': 'irani', 'flag': 'assets/flags/irani.png'},
-    {'name': 'xanxere', 'flag': 'assets/flags/xanxere.png'},
-    {'name': 'chapeco', 'flag': 'assets/flags/chapeco.png'},
+    {'name': 'Concórdia', 'flag': 'flags/concordia.jpg'},
+    {'name': 'Seara', 'flag': 'flags/seara.jpg'},
+    {'name': 'Ipumirim', 'flag': 'flags/ipumirim.jpg'},
+    {'name': 'Arabutâ', 'flag': 'flags/arabuta.jpg'},
+    {'name': 'Irani', 'flag': 'flags/irani.jpg'},
+    {'name': 'Xanxerê', 'flag': 'flags/xanxere.jpg'},
+    {'name': 'Chapecó', 'flag': 'flags/chapeco.jpg'},
   ];
 
   @override
@@ -33,26 +33,37 @@ class _HomePageState extends State<HomePage> {
           'Urban Issue Tracker',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
         ),
+        leadingWidth: 120,
         leading: PopupMenuButton<Map<String, String>>(
           tooltip: 'Selecionar cidade',
-          icon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClipRRect(borderRadius: BorderRadius.circular(4)),
-              const SizedBox(width: 4),
-              FittedBox(
-                child: Image.asset(
-                  'assets/flags/$city.png',
-                  width: 25,
-                  height: 25,
+          child: SizedBox(
+            width: 50,
+            height: kToolbarHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.asset(
+                    flag,
+                    width: 40,
+                    height: 28,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-              const Icon(Icons.keyboard_arrow_down, color: Colors.black87),
-            ],
+                const SizedBox(width: 3),
+                const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.black87,
+                  size: 18,
+                ),
+              ],
+            ),
           ),
           onSelected: (cityItem) {
             setState(() {
               city = cityItem['name']!;
+              flag = cityItem['flag']!;
               AppState().selectedCity = city;
               AppState().selectedFlag = flag;
             });
@@ -64,6 +75,7 @@ class _HomePageState extends State<HomePage> {
             );
           }).toList(),
         ),
+
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline),
@@ -77,12 +89,12 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SizedBox(height: 10),
+            Image.asset('flags/concordia.jpg'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(width: 8),
                 Text(
                   city,
                   style: const TextStyle(
@@ -93,34 +105,24 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 30),
 
             // Botões
             ElevatedButton.icon(
               onPressed: () =>
                   Navigator.pushNamed(context, AppRoutes.reportIssue),
               icon: const Icon(Icons.report_problem_outlined),
-              label: const Text('Report Issue'),
+              label: const Text('Relatar Problema'),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.anonymousReport),
-              icon: const Icon(Icons.visibility_off_outlined),
-              label: const Text('Anonymous Report'),
-            ),
-            const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () => Navigator.pushNamed(context, AppRoutes.map),
               icon: const Icon(Icons.map_outlined),
-              label: const Text('See Map'),
+              label: const Text('Ver Mapa'),
             ),
-            const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () =>
                   Navigator.pushNamed(context, AppRoutes.issueStatus),
               icon: const Icon(Icons.list_alt_outlined),
-              label: const Text('Status of Issues'),
+              label: const Text('Status dos Problemas'),
             ),
           ],
         ),
