@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:app_hackaton/data/local_storage.dart';
+import 'package:app_hackaton/db/issue_repository.dart';
 import 'package:app_hackaton/data/models/issue_model.dart';
 import 'package:app_hackaton/state/app_state.dart';
 
@@ -17,6 +17,7 @@ class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   List<Issue> _issues = [];
   late LatLng _initialCenter;
+  final _issueRepo = IssueRepository();
 
   final List<String> _problemas = [
     'Buraco na estrada',
@@ -36,9 +37,10 @@ class _MapPageState extends State<MapPage> {
     _loadIssues();
   }
 
-  void _loadIssues() {
+  void _loadIssues() async {
+    final issues = await _issueRepo.getAllIssues();
     setState(() {
-      _issues = LocalStorage.getIssues();
+      _issues = issues;
     });
   }
 
@@ -109,13 +111,11 @@ class _MapPageState extends State<MapPage> {
                           builder: (context, setState) {
                             return DraggableScrollableSheet(
                               expand: false,
-                              // Minimizada: 0.12, expandida: 0.35 (menor que antes)
                               initialChildSize: expanded ? 0.35 : 0.12,
                               minChildSize: 0.12,
                               maxChildSize: 0.55,
                               builder: (context, scrollController) {
                                 return GestureDetector(
-                                  // qualquer clique na box minimizada expande
                                   onTap: () {
                                     setState(() {
                                       expanded = true;
@@ -153,7 +153,6 @@ class _MapPageState extends State<MapPage> {
                                               ),
                                             ),
 
-                                            // Conteúdo da box (título + imagem)
                                             Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
@@ -177,7 +176,6 @@ class _MapPageState extends State<MapPage> {
 
                                             const SizedBox(height: 6),
 
-                                            // Descrição só aparece quando expandida
                                             if (expanded) ...[
                                               Text(
                                                 issue.description,

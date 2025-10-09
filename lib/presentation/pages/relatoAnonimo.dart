@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_hackaton/data/models/issue_model.dart';
+import 'package:app_hackaton/db/issue_repository.dart';
 
 class RelatoAnonimo extends StatefulWidget {
   const RelatoAnonimo({super.key});
@@ -15,6 +17,7 @@ class _RelatoAnonimoState extends State<RelatoAnonimo> {
   final TextEditingController _descricaoController = TextEditingController();
   String? _localizacao;
   File? _imagem;
+  final _issueRepo = IssueRepository();
 
   final List<String> _problemas = [
     'Buraco na estrada',
@@ -212,14 +215,40 @@ class _RelatoAnonimoState extends State<RelatoAnonimo> {
                 backgroundColor: Colors.blue[700],
                 minimumSize: const Size(double.infinity, 50),
               ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Enviado! Problema: $_selectedProblem\n$_localizacao',
-                    ),
-                  ),
+              onPressed: () async {
+                if (_selectedProblem == null || _localizacao == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Por favor, selecione o tipo e localização.')),
+                  );
+                  return;
+                }
+
+                final parts = _localizacao!.split(', ');
+                final issue = Issue(
+                  type: _selectedProblem!,
+                  description: _descricaoController.text,
+                  latitude: double.parse(parts[0]),
+                  longitude: double.parse(parts[1]),
+                  imagePath: _imagem?.path,
+                  userId: null, // No user ID for anonymous reports
+                  isAnonymous: true,
+                  status: 'pending',
                 );
+
+                await _issueRepo.insertIssue(issue);
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Problema anônimo salvo com sucesso!')),
+                  );
+
+                  _descricaoController.clear();
+                  setState(() {
+                    _selectedProblem = null;
+                    _localizacao = null;
+                    _imagem = null;
+                  });
+                }
               },
               child: const Text('Enviar', style: TextStyle(fontSize: 18)),
             ),

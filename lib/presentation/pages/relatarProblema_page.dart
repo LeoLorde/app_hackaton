@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_hackaton/data/models/issue_model.dart';
-import 'package:app_hackaton/data/local_storage.dart';
+import 'package:app_hackaton/db/issue_repository.dart';
+import 'package:app_hackaton/db/user_repository.dart';
 
 class RelatarproblemaPage extends StatefulWidget {
   const RelatarproblemaPage({super.key});
@@ -17,6 +18,8 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
   final TextEditingController _descricaoController = TextEditingController();
   String? _localizacao;
   File? _imagem;
+  final _issueRepo = IssueRepository();
+  final _userRepo = UserRepository();
 
   final List<String> _problemas = [
     'Buraco na estrada',
@@ -137,7 +140,6 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                     _localizacao = '${pos.latitude}, ${pos.longitude}';
                   });
                 } catch (e) {
-                  // se der erro (negou permissão, serviço desligado, etc)
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Erro ao pegar localização: $e')),
                   );
@@ -222,6 +224,8 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                   return;
                 }
 
+                final userId = await _userRepo.getAuthenticatedUserId();
+
                 final parts = _localizacao!.split(', ');
                 final issue = Issue(
                   type: _selectedProblem!,
@@ -229,20 +233,25 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                   latitude: double.parse(parts[0]),
                   longitude: double.parse(parts[1]),
                   imagePath: _imagem?.path,
+                  userId: userId,
+                  isAnonymous: false,
+                  status: 'pending',
                 );
 
-                await LocalStorage.addIssue(issue);
+                await _issueRepo.insertIssue(issue);
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Problema salvo com sucesso!')),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Problema salvo com sucesso!')),
+                  );
 
-                _descricaoController.clear();
-                setState(() {
-                  _selectedProblem = null;
-                  _localizacao = null;
-                  _imagem = null;
-                });
+                  _descricaoController.clear();
+                  setState(() {
+                    _selectedProblem = null;
+                    _localizacao = null;
+                    _imagem = null;
+                  });
+                }
               },
               child: const Text('Enviar', style: TextStyle(fontSize: 18)),
             ),
