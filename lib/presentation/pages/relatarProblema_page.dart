@@ -270,10 +270,7 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                 ),
                 children: _problemas.map((problema) {
                   return RadioListTile<String>(
-                    title: Text(
-                      problema,
-                      style: const TextStyle(fontSize: 15),
-                    ),
+                    title: Text(problema, style: const TextStyle(fontSize: 15)),
                     value: problema,
                     groupValue: _selectedProblem,
                     activeColor: Colors.blue[700],
@@ -324,7 +321,10 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
+                      borderSide: BorderSide(
+                        color: Colors.blue[700]!,
+                        width: 2,
+                      ),
                     ),
                     contentPadding: const EdgeInsets.all(16),
                   ),
@@ -365,11 +365,7 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.location_on,
-                      color: Colors.blue[700],
-                      size: 24,
-                    ),
+                    Icon(Icons.location_on, color: Colors.blue[700], size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -444,29 +440,6 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: () => _selecionarImagem(false),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.attach_file,
-                          color: Colors.blue[700],
-                          size: 20,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'ou selecione da galeria',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            decoration: TextDecoration.underline,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   if (_imagem != null) ...[
                     const SizedBox(height: 16),
                     ClipRRect(
@@ -510,7 +483,9 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                   if (_selectedProblem == null || _localizacao == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Por favor, selecione o tipo e localização.'),
+                        content: Text(
+                          'Por favor, selecione o tipo e localização.',
+                        ),
                         backgroundColor: Colors.orange,
                       ),
                     );
