@@ -1,0 +1,20 @@
+final db = DatabaseHelper.instance;
+
+// 1️⃣ Create a table
+await db.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)');
+
+// 2️⃣ Insert data
+await db.insert('users', {'name': 'Alice', 'age': 30});
+
+// 3️⃣ Query data
+final users = await db.query('users', where: 'age > ?', whereArgs: [20]);
+print(users);
+
+// 4️⃣ Update data
+await db.update('users', {'age': 31}, where: 'name = ?', whereArgs: ['Alice']);
+
+// 5️⃣ Delete data
+await db.delete('users', where: 'id = ?', whereArgs: [1]);
+
+// 6️⃣ Raw query
+final result = await db.rawQuery('SELECT COUNT(*) FROM users');

@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_hackaton/data/models/issue_model.dart';
+import 'package:app_hackaton/data/local_storage.dart';
 
 class RelatarproblemaPage extends StatefulWidget {
   const RelatarproblemaPage({super.key});
@@ -212,14 +214,35 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
                 backgroundColor: Colors.blue[700],
                 minimumSize: const Size(double.infinity, 50),
               ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Enviado! Problema: $_selectedProblem\n$_localizacao',
-                    ),
-                  ),
+              onPressed: () async {
+                if (_selectedProblem == null || _localizacao == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Por favor, selecione o tipo e localização.')),
+                  );
+                  return;
+                }
+
+                final parts = _localizacao!.split(', ');
+                final issue = Issue(
+                  type: _selectedProblem!,
+                  description: _descricaoController.text,
+                  latitude: double.parse(parts[0]),
+                  longitude: double.parse(parts[1]),
+                  imagePath: _imagem?.path,
                 );
+
+                await LocalStorage.addIssue(issue);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Problema salvo com sucesso!')),
+                );
+
+                _descricaoController.clear();
+                setState(() {
+                  _selectedProblem = null;
+                  _localizacao = null;
+                  _imagem = null;
+                });
               },
               child: const Text('Enviar', style: TextStyle(fontSize: 18)),
             ),

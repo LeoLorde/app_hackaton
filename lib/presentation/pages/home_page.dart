@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_hackaton/app/routes.dart';
 import 'package:app_hackaton/state/app_state.dart';
+import 'package:app_hackaton/db/user_repository.dart';
+import 'package:app_hackaton/data/city_coordinates.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -60,8 +62,12 @@ class _HomePageState extends State<HomePage> {
             setState(() {
               city = cityItem['name']!;
               flag = cityItem['flag']!;
+
+              final coords = CityCoordinates.getCoordinates(city);
               AppState().selectedCity = city;
               AppState().selectedFlag = flag;
+              AppState().cityLat = coords['lat'];
+              AppState().cityLon = coords['lon'];
             });
           },
           itemBuilder: (context) => cities.map((cityItem) {
@@ -77,7 +83,18 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.person_outline),
             color: Colors.black,
             tooltip: 'Profile',
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.profile),
+            onPressed: () async {
+              final userRepo = UserRepository();
+              final isAuth = await userRepo.isAuthenticated();
+
+              if (isAuth) {
+                // ✅ Authenticated — go to edit profile
+                Navigator.pushNamed(context, AppRoutes.profile);
+              } else {
+                // 🚫 Not authenticated — go to register
+                Navigator.pushNamed(context, AppRoutes.register);
+              }
+            },
           ),
         ],
       ),

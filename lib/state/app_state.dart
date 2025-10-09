@@ -3,6 +3,9 @@ class AppState {
   factory AppState() => _instance;
   AppState._internal();
 
-  String selectedCity = 'Concordia';
+  String selectedCity = 'Concórdia';
   String selectedFlag = 'assets/flags/concordia.jpg';
+
+  double? cityLat;
+  double? cityLon;
 }
