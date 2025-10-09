@@ -20,7 +20,10 @@ class DatabaseHelper {
   }
 
   /// Run any raw SQL
-  Future<List<Map<String, dynamic>>> rawQuery(String sql, [List<Object?>? args]) async {
+  Future<List<Map<String, dynamic>>> rawQuery(
+    String sql, [
+    List<Object?>? args,
+  ]) async {
     final db = await instance.database;
     return await db.rawQuery(sql, args);
   }
@@ -28,7 +31,11 @@ class DatabaseHelper {
   /// Insert into a table
   Future<int> insert(String table, Map<String, dynamic> values) async {
     final db = await instance.database;
-    return await db.insert(table, values, conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      table,
+      values,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   /// Query all or by conditions
