@@ -73,64 +73,113 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
-        title: const Text('Relate seu problema'),
+        title: const Text(
+          'Relate seu problema',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.grey[400],
+        backgroundColor: Colors.white,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: ListView(
           children: [
-            ExpansionTile(
-              collapsedBackgroundColor: Colors.blue[700],
-              backgroundColor: Colors.blue[50],
-              collapsedShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              title: const Text(
-                'Tipo do problema',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              child: ExpansionTile(
+                collapsedBackgroundColor: Colors.blue[700],
+                backgroundColor: Colors.white,
+                collapsedShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                title: const Text(
+                  'Tipo do problema',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+                children: _problemas.map((problema) {
+                  return RadioListTile<String>(
+                    title: Text(
+                      problema,
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                    value: problema,
+                    groupValue: _selectedProblem,
+                    activeColor: Colors.blue[700],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedProblem = value;
+                      });
+                    },
+                  );
+                }).toList(),
               ),
-              children: _problemas.map((problema) {
-                return RadioListTile<String>(
-                  title: Text(problema),
-                  value: problema,
-                  groupValue: _selectedProblem,
-                  activeColor: Colors.blue,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedProblem = value;
-                    });
-                  },
-                );
-              }).toList(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            SizedBox(
-              height: 120,
-              child: TextField(
-                controller: _descricaoController,
-                maxLines: null,
-                expands: true,
-                decoration: InputDecoration(
-                  labelText: 'Descrição',
-                  alignLabelWithHint: true,
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.blueAccent),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: SizedBox(
+                height: 130,
+                child: TextField(
+                  controller: _descricaoController,
+                  maxLines: null,
+                  expands: true,
+                  decoration: InputDecoration(
+                    labelText: 'Descrição',
+                    labelStyle: TextStyle(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    alignLabelWithHint: true,
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             GestureDetector(
               onTap: () async {
@@ -147,26 +196,40 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 16,
+                  horizontal: 16,
+                  vertical: 18,
                 ),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blueAccent),
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.grey[50],
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.location_on, color: Colors.grey),
-                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.location_on,
+                      color: Colors.blue[700],
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _localizacao ?? 'Localização',
+                        _localizacao ?? 'Toque para obter localização',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           color: _localizacao == null
-                              ? Colors.grey
-                              : Colors.black,
+                              ? Colors.grey[600]
+                              : Colors.black87,
+                          fontWeight: _localizacao == null
+                              ? FontWeight.normal
+                              : FontWeight.w500,
                         ),
                       ),
                     ),
@@ -175,85 +238,174 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.blueAccent),
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.grey[50],
+                color: Colors.white,
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
-                  ElevatedButton(
-                    onPressed: () => _selecionarImagem(true),
-                    child: const Text('Tire uma foto'),
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => _selecionarImagem(false),
-                    child: const Text(
-                      '📎 ou coloque sua imagem',
-                      style: TextStyle(
-                        color: Colors.blueAccent,
-                        decoration: TextDecoration.underline,
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
+                      onPressed: () => _selecionarImagem(true),
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: const Text(
+                        'Tire uma foto',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[700],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 24,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () => _selecionarImagem(false),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.attach_file,
+                          color: Colors.blue[700],
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'ou selecione da galeria',
+                          style: TextStyle(
+                            color: Colors.blue[700],
+                            decoration: TextDecoration.underline,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   if (_imagem != null) ...[
-                    const SizedBox(height: 10),
-                    Image.file(_imagem!, height: 150, fit: BoxFit.cover),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        _imagem!,
+                        height: 160,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ],
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[700],
-                minimumSize: const Size(double.infinity, 50),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-              onPressed: () async {
-                if (_selectedProblem == null || _localizacao == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Por favor, selecione o tipo e localização.')),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700],
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () async {
+                  if (_selectedProblem == null || _localizacao == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Por favor, selecione o tipo e localização.'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
+                  }
+
+                  final userId = await _userRepo.getAuthenticatedUserId();
+
+                  final parts = _localizacao!.split(', ');
+                  final issue = Issue(
+                    type: _selectedProblem!,
+                    description: _descricaoController.text,
+                    latitude: double.parse(parts[0]),
+                    longitude: double.parse(parts[1]),
+                    imagePath: _imagem?.path,
+                    userId: userId,
+                    isAnonymous: false,
+                    status: 'pending',
                   );
-                  return;
-                }
 
-                final userId = await _userRepo.getAuthenticatedUserId();
+                  await _issueRepo.insertIssue(issue);
 
-                final parts = _localizacao!.split(', ');
-                final issue = Issue(
-                  type: _selectedProblem!,
-                  description: _descricaoController.text,
-                  latitude: double.parse(parts[0]),
-                  longitude: double.parse(parts[1]),
-                  imagePath: _imagem?.path,
-                  userId: userId,
-                  isAnonymous: false,
-                  status: 'pending',
-                );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Problema salvo com sucesso!'),
+                        backgroundColor: Colors.green[600],
+                      ),
+                    );
 
-                await _issueRepo.insertIssue(issue);
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Problema salvo com sucesso!')),
-                  );
-
-                  _descricaoController.clear();
-                  setState(() {
-                    _selectedProblem = null;
-                    _localizacao = null;
-                    _imagem = null;
-                  });
-                }
-              },
-              child: const Text('Enviar', style: TextStyle(fontSize: 18)),
+                    _descricaoController.clear();
+                    setState(() {
+                      _selectedProblem = null;
+                      _localizacao = null;
+                      _imagem = null;
+                    });
+                  }
+                },
+                child: const Text(
+                  'Enviar',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

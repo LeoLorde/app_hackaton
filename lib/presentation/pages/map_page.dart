@@ -67,11 +67,26 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mapa - ${AppState().selectedCity}'),
+        title: Text(
+          'Mapa - ${AppState().selectedCity}',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadIssues,
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: const Icon(Icons.refresh),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.grey[100],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: _loadIssues,
+            ),
           ),
         ],
       ),
@@ -89,7 +104,6 @@ class _MapPageState extends State<MapPage> {
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             userAgentPackageName: 'com.example.app_hackaton',
           ),
-
           MarkerLayer(
             markers: _issues.map((issue) {
               final markerColor = _getMarkerColor(issue.type);
@@ -125,19 +139,19 @@ class _MapPageState extends State<MapPage> {
                                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
-                                      borderRadius: BorderRadius.zero,
+                                      borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.12),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, -2),
+                                          color: Colors.black.withOpacity(0.15),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, -4),
                                         ),
                                       ],
                                     ),
                                     child: SingleChildScrollView(
                                       controller: scrollController,
                                       child: Padding(
-                                        padding: const EdgeInsets.all(12.0),
+                                        padding: const EdgeInsets.all(20.0),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
@@ -145,41 +159,45 @@ class _MapPageState extends State<MapPage> {
                                               child: Container(
                                                 width: 40,
                                                 height: 5,
-                                                margin: const EdgeInsets.only(bottom: 8),
+                                                margin: const EdgeInsets.only(bottom: 16),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.grey[400],
+                                                  color: Colors.grey[300],
                                                   borderRadius: BorderRadius.circular(10),
                                                 ),
                                               ),
                                             ),
-
                                             Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   issue.type,
                                                   style: const TextStyle(
-                                                    fontSize: 17,
+                                                    fontSize: 18,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
-                                                const SizedBox(height: 6),
+                                                const SizedBox(height: 12),
                                                 if (issue.imagePath != null)
-                                                  Image.file(
-                                                    File(issue.imagePath!),
-                                                    height: 90,
-                                                    width: double.infinity,
-                                                    fit: BoxFit.cover,
+                                                  ClipRRect(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    child: Image.file(
+                                                      File(issue.imagePath!),
+                                                      height: 120,
+                                                      width: double.infinity,
+                                                      fit: BoxFit.cover,
+                                                    ),
                                                   ),
                                               ],
                                             ),
-
-                                            const SizedBox(height: 6),
-
+                                            const SizedBox(height: 12),
                                             if (expanded) ...[
                                               Text(
                                                 issue.description,
-                                                style: const TextStyle(fontSize: 15),
+                                                style: TextStyle(
+                                                  fontSize: 15,
+                                                  color: Colors.grey[700],
+                                                  height: 1.5,
+                                                ),
                                               ),
                                               const SizedBox(height: 6),
                                             ],
@@ -196,10 +214,22 @@ class _MapPageState extends State<MapPage> {
                       },
                     );
                   },
-                  child: Icon(
-                    Icons.location_pin,
-                    color: markerColor,
-                    size: 40,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: markerColor.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.location_pin,
+                      color: markerColor,
+                      size: 44,
+                    ),
                   ),
                 ),
               );

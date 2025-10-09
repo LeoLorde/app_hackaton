@@ -30,30 +30,42 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
         leadingWidth: 120,
         leading: PopupMenuButton<Map<String, String>>(
           tooltip: 'Selecionar cidade',
-          child: SizedBox(
-            width: 50,
-            height: kToolbarHeight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Image.asset(
-                    flag,
-                    width: 40,
-                    height: 28,
-                    fit: BoxFit.cover,
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      flag,
+                      width: 44,
+                      height: 30,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 3),
+                const SizedBox(width: 6),
                 const Icon(
                   Icons.keyboard_arrow_down,
                   color: Colors.black87,
-                  size: 18,
+                  size: 20,
                 ),
               ],
             ),
@@ -77,73 +89,168 @@ class _HomePageState extends State<HomePage> {
             );
           }).toList(),
         ),
-
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            color: Colors.black,
-            tooltip: 'Profile',
-            onPressed: () async {
-              final userRepo = UserRepository();
-              final isAuth = await userRepo.isAuthenticated();
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: const Icon(Icons.person_outline),
+              color: Colors.black87,
+              tooltip: 'Profile',
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.grey[100],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () async {
+                final userRepo = UserRepository();
+                final isAuth = await userRepo.isAuthenticated();
 
-              if (isAuth) {
-                // ✅ Authenticated — go to edit profile
-                Navigator.pushNamed(context, AppRoutes.profile);
-              } else {
-                // 🚫 Not authenticated — go to register
-                Navigator.pushNamed(context, AppRoutes.register);
-              }
-            },
+                if (isAuth) {
+                  Navigator.pushNamed(context, AppRoutes.profile);
+                } else {
+                  Navigator.pushNamed(context, AppRoutes.register);
+                }
+              },
+            ),
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Image.asset('assets/images/logo.png'),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  city,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
+                ],
+              ),
+              child: Image.asset('assets/images/logo.png'),
+            ),
+            
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: Colors.blue[700],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    city,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Column(
+              children: [
+                _buildStyledButton(
+                  context,
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.reportIssue),
+                  icon: Icons.report_problem_outlined,
+                  label: 'Relatar Problema',
+                  color: Colors.blue[700]!,
+                ),
+                const SizedBox(height: 14),
+                _buildStyledButton(
+                  context,
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.anonymousReport),
+                  icon: Icons.visibility_off_outlined,
+                  label: 'Relatar Problema Anônimo',
+                  color: Colors.blue[600]!,
+                ),
+                const SizedBox(height: 14),
+                _buildStyledButton(
+                  context,
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.map),
+                  icon: Icons.map_outlined,
+                  label: 'Ver Mapa',
+                  color: Colors.blue[700]!,
+                ),
+                const SizedBox(height: 14),
+                _buildStyledButton(
+                  context,
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.issueStatus),
+                  icon: Icons.list_alt_outlined,
+                  label: 'Status dos Problemas',
+                  color: Colors.blue[600]!,
                 ),
               ],
             ),
-
-            // Botões
-            ElevatedButton.icon(
-              onPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.reportIssue),
-              icon: const Icon(Icons.report_problem_outlined),
-              label: const Text('Relatar Problema'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.anonymousReport),
-              icon: const Icon(Icons.water_rounded),
-              label: const Text('Relatar Problema Anônimo'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pushNamed(context, AppRoutes.map),
-              icon: const Icon(Icons.map_outlined),
-              label: const Text('Ver Mapa'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.issueStatus),
-              icon: const Icon(Icons.list_alt_outlined),
-              label: const Text('Status dos Problemas'),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStyledButton(
+    BuildContext context, {
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 22),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
         ),
       ),
     );
