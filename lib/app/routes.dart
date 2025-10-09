@@ -7,6 +7,7 @@ import 'package:app_hackaton/presentation/pages/status.dart';
 import 'package:app_hackaton/presentation/pages/map_page.dart';
 import 'package:app_hackaton/presentation/pages/profile_page.dart';
 import 'package:app_hackaton/presentation/pages/account_register.dart';
+import 'package:app_hackaton/presentation/pages/login_page.dart';
 
 class AppRoutes {
   static const String home = '/';
@@ -16,6 +17,7 @@ class AppRoutes {
   static const String map = '/map';
   static const String profile = '/profile';
   static const String register = '/register';
+  static const String login = '/login';
 
   static Map<String, WidgetBuilder> get routes => {
     home: (context) => const HomePage(),
@@ -25,5 +27,6 @@ class AppRoutes {
     issueStatus: (context) => StatusPage(),
     profile: (context) => EditProfile(),
     register: (context) => AccountRegister(),
+    login: (context) => LoginPage(),
   };
 }

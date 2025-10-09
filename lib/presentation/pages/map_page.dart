@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:app_hackaton/db/issue_repository.dart';
+import 'package:app_hackaton/db/database_helper.dart';
 import 'package:app_hackaton/data/models/issue_model.dart';
 import 'package:app_hackaton/state/app_state.dart';
 
@@ -18,6 +19,7 @@ class _MapPageState extends State<MapPage> {
   List<Issue> _issues = [];
   late LatLng _initialCenter;
   final _issueRepo = IssueRepository();
+  final _db = DatabaseHelper.instance;
 
   final List<String> _problemas = [
     'Buraco na estrada',
@@ -38,10 +40,41 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _loadIssues() async {
-    final issues = await _issueRepo.getAllIssues();
-    setState(() {
-      _issues = issues;
-    });
+    try {
+      final issues = await _issueRepo.getAllIssues();
+      if (mounted) {
+        setState(() {
+          _issues = issues;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar problemas: $e')),
+        );
+      }
+    }
+  }
+
+  Future<String?> _getReporterName(int? userId) async {
+    if (userId == null) return null;
+    
+    try {
+      final users = await _db.query(
+        'users',
+        where: 'id = ?',
+        whereArgs: [userId],
+        limit: 1,
+      );
+      
+      if (users.isNotEmpty) {
+        return users.first['name'] as String?;
+      }
+    } catch (e) {
+      print('Error fetching reporter name: $e');
+    }
+    
+    return null;
   }
 
   Color _getMarkerColor(String type) {
@@ -113,8 +146,14 @@ class _MapPageState extends State<MapPage> {
                 width: 60,
                 height: 60,
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     bool expanded = false;
+                    String? reporterName;
+                    if (!issue.isAnonymous && issue.userId != null) {
+                      reporterName = await _getReporterName(issue.userId);
+                    }
+
+                    if (!mounted) return;
 
                     showModalBottomSheet(
                       context: context,
@@ -176,6 +215,58 @@ class _MapPageState extends State<MapPage> {
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
+                                                if (issue.isAnonymous) ...[
+                                                  const SizedBox(height: 8),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 4,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[200],
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(
+                                                          Icons.visibility_off,
+                                                          size: 14,
+                                                          color: Colors.grey[700],
+                                                        ),
+                                                        const SizedBox(width: 4),
+                                                        Text(
+                                                          'Relato Anônimo',
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            color: Colors.grey[700],
+                                                            fontWeight: FontWeight.w500,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ] else if (reporterName != null) ...[
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.person_outline,
+                                                        size: 16,
+                                                        color: Colors.blue[700],
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        'Relatado por: $reporterName',
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          color: Colors.grey[700],
+                                                          fontWeight: FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
                                                 const SizedBox(height: 12),
                                                 if (issue.imagePath != null)
                                                   ClipRRect(

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:app_hackaton/data/models/issue_model.dart';
 import 'package:app_hackaton/db/issue_repository.dart';
 import 'package:app_hackaton/db/user_repository.dart';
+import 'package:app_hackaton/app/routes.dart';
 
 class RelatarproblemaPage extends StatefulWidget {
   const RelatarproblemaPage({super.key});
@@ -20,6 +21,8 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
   File? _imagem;
   final _issueRepo = IssueRepository();
   final _userRepo = UserRepository();
+  bool _isCheckingAuth = true;
+  bool _isAuthenticated = false;
 
   final List<String> _problemas = [
     'Buraco na estrada',
@@ -30,14 +33,79 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
     'Risco de queda de árvore',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    final isAuth = await _userRepo.isAuthenticated();
+    setState(() {
+      _isAuthenticated = isAuth;
+      _isCheckingAuth = false;
+    });
+
+    if (!isAuth) {
+      if (mounted) {
+        _showLoginRequiredDialog();
+      }
+    }
+  }
+
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.lock_outline, color: Colors.blue[700]),
+            const SizedBox(width: 12),
+            const Text('Login Necessário'),
+          ],
+        ),
+        content: const Text(
+          'Você precisa estar logado para fazer um relato normal. '
+          'Deseja fazer login ou criar uma conta?',
+          style: TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('Voltar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, AppRoutes.login);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[700],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('Fazer Login'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<Position> _pegarLocalizacao() async {
-    // Verifica se o serviço de localização está ativado
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       throw Exception('Serviço de localização está desativado');
     }
 
-    // Verifica permissões
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -50,7 +118,6 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
       throw Exception('Permissão de localização negada permanentemente');
     }
 
-    // Pega a posição
     return await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
@@ -72,6 +139,91 @@ class _RelatarproblemaPageState extends State<RelatarproblemaPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingAuth) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF4F6F8),
+        appBar: AppBar(
+          title: const Text(
+            'Relate seu problema',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.1),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (!_isAuthenticated) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF4F6F8),
+        appBar: AppBar(
+          title: const Text(
+            'Relate seu problema',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.1),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.lock_outline,
+                  size: 80,
+                  color: Colors.blue[700],
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Login Necessário',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Você precisa estar logado para fazer um relato normal.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, AppRoutes.login);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Fazer Login',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(

@@ -1,62 +1,63 @@
 import 'package:flutter/material.dart';
-import 'package:app_hackaton/db/database_helper.dart';
+import 'package:app_hackaton/db/user_repository.dart';
 
-class AccountRegister extends StatefulWidget {
-  const AccountRegister({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<AccountRegister> createState() => _AccountRegisterState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _AccountRegisterState extends State<AccountRegister> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final db = DatabaseHelper.instance;
+  final _userRepo = UserRepository();
 
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
 
-  Future<void> _registerUser() async {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final exists = await db.tableExists('users');
-      if (!exists) {
-        await db.execute('''CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            email TEXT,
-            password TEXT,
-            is_authenticated INTEGER DEFAULT 0
-          )
-        ''');
-      }
-
-      await db.insert('users', {
-        'name': _nameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'password': _passwordController.text.trim(),
-        'is_authenticated': 1,
-      });
+      final user = await _userRepo.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
 
       setState(() => _isLoading = false);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuário cadastrado com sucesso!')),
-        );
-        Navigator.pop(context);
+      if (user != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login realizado com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context); // Return to home
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email ou senha incorretos'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao cadastrar: $e')),
+          SnackBar(
+            content: Text('Erro ao fazer login: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -68,7 +69,7 @@ class _AccountRegisterState extends State<AccountRegister> {
       backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
         title: const Text(
-          'Registrar Conta',
+          'Login',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
@@ -99,13 +100,13 @@ class _AccountRegisterState extends State<AccountRegister> {
                 child: Column(
                   children: [
                     Icon(
-                      Icons.person_add_outlined,
+                      Icons.login_outlined,
                       size: 48,
                       color: Colors.blue[700],
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Crie sua conta',
+                      'Bem-vindo de volta',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -114,7 +115,7 @@ class _AccountRegisterState extends State<AccountRegister> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Preencha os dados abaixo',
+                      'Entre com suas credenciais',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -123,42 +124,6 @@ class _AccountRegisterState extends State<AccountRegister> {
                   ],
                 ),
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nome completo',
-                    prefixIcon: Icon(Icons.person_outline, color: Colors.blue[700]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  validator: (v) => v == null || v.isEmpty ? 'Informe seu nome' : null,
-                ),
-              ),
-              const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -229,45 +194,7 @@ class _AccountRegisterState extends State<AccountRegister> {
                     fillColor: Colors.white,
                   ),
                   obscureText: true,
-                  validator: (v) => v == null || v.length < 4 ? 'Senha muito curta' : null,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextFormField(
-                  controller: _confirmPasswordController,
-                  decoration: InputDecoration(
-                    labelText: 'Confirmar senha',
-                    prefixIcon: Icon(Icons.lock_outline, color: Colors.blue[700]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  obscureText: true,
-                  validator: (v) =>
-                      v != _passwordController.text ? 'Senhas não coincidem' : null,
+                  validator: (v) => v == null || v.isEmpty ? 'Informe a senha' : null,
                 ),
               ),
               const SizedBox(height: 32),
@@ -285,10 +212,10 @@ class _AccountRegisterState extends State<AccountRegister> {
                         ],
                       ),
                       child: ElevatedButton.icon(
-                        onPressed: _registerUser,
-                        icon: const Icon(Icons.person_add_outlined, size: 22),
+                        onPressed: _login,
+                        icon: const Icon(Icons.login_outlined, size: 22),
                         label: const Text(
-                          'Registrar',
+                          'Entrar',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -311,7 +238,7 @@ class _AccountRegisterState extends State<AccountRegister> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Já tem uma conta? ',
+                    'Não tem uma conta? ',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 14,
@@ -319,10 +246,10 @@ class _AccountRegisterState extends State<AccountRegister> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacementNamed(context, '/login');
+                      Navigator.pushReplacementNamed(context, '/register');
                     },
                     child: Text(
-                      'Faça login',
+                      'Registre-se',
                       style: TextStyle(
                         color: Colors.blue[700],
                         fontSize: 14,

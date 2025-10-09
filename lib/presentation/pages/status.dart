@@ -14,6 +14,7 @@ class _StatusPageState extends State<StatusPage> {
   List<Issue> _issues = [];
   final _issueRepo = IssueRepository();
   bool _isLoading = true;
+  String? _errorMessage;
 
   final List<String> _tiposProblema = [
     'Buraco na estrada',
@@ -31,12 +32,46 @@ class _StatusPageState extends State<StatusPage> {
   }
 
   Future<void> _loadIssues() async {
-    setState(() => _isLoading = true);
-    final issues = await _issueRepo.getAllIssues();
+    if (!mounted) return;
+    
     setState(() {
-      _issues = issues;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      final issues = await _issueRepo.getAllIssues().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Tempo esgotado ao carregar problemas');
+        },
+      );
+      
+      if (mounted) {
+        setState(() {
+          _issues = issues;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Erro ao carregar: $e';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao carregar problemas: $e'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Tentar novamente',
+              textColor: Colors.white,
+              onPressed: _loadIssues,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Color _statusColor(String status) {
@@ -126,13 +161,22 @@ class _StatusPageState extends State<StatusPage> {
             TextButton(
               onPressed: () async {
                 if (newStatus != null && issue.id != null) {
-                  await _issueRepo.updateIssueStatus(issue.id!, newStatus!);
-                  await _loadIssues();
-                  if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Status atualizado!')),
-                    );
+                  try {
+                    await _issueRepo.updateIssueStatus(issue.id!, newStatus!);
+                    await _loadIssues();
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Status atualizado!')),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erro ao atualizar: $e')),
+                      );
+                    }
                   }
                 }
               },
@@ -178,264 +222,307 @@ class _StatusPageState extends State<StatusPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[700],
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blue.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      dropdownColor: Colors.blue[700],
-                      value: _selectedTipo,
-                      hint: const Text(
-                        'Filtrar por tipo',
+          : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
                         style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _loadIssues,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Tentar novamente'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[700],
+                          foregroundColor: Colors.white,
                         ),
                       ),
-                      iconEnabledColor: Colors.white,
-                      underline: const SizedBox(),
-                      items: _tiposProblema.map((tipo) {
-                        return DropdownMenuItem(
-                          value: tipo,
-                          child: Text(
-                            tipo,
-                            style: const TextStyle(
+                    ],
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[700],
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          dropdownColor: Colors.blue[700],
+                          value: _selectedTipo,
+                          hint: const Text(
+                            'Filtrar por tipo',
+                            style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedTipo = value;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  Expanded(
-                    child: problemasFiltrados.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.inbox_outlined,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Nenhum problema encontrado',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: problemasFiltrados.length,
-                            itemBuilder: (context, index) {
-                              final issue = problemasFiltrados[index];
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                decoration: BoxDecoration(
+                          iconEnabledColor: Colors.white,
+                          underline: const SizedBox(),
+                          items: _tiposProblema.map((tipo) {
+                            return DropdownMenuItem(
+                              value: tipo,
+                              child: Text(
+                                tipo,
+                                style: const TextStyle(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.06),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedTipo = value;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      Expanded(
+                        child: problemasFiltrados.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.inbox_outlined,
+                                      size: 64,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Nenhum problema encontrado',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ],
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                              )
+                            : ListView.builder(
+                                itemCount: problemasFiltrados.length,
+                                itemBuilder: (context, index) {
+                                  final issue = problemasFiltrados[index];
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.06),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            child: Text(
-                                              issue.type,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                          ),
-                                          if (issue.isAnonymous)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 10,
-                                                vertical: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey[200],
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.visibility_off,
-                                                    size: 14,
-                                                    color: Colors.grey[700],
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  issue.type,
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.black87,
                                                   ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    'Anônimo',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.grey[700],
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        issue.description,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _statusColor(issue.status).withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(
-                                            color: _statusColor(issue.status).withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              width: 8,
-                                              height: 8,
-                                              decoration: BoxDecoration(
-                                                color: _statusColor(issue.status),
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              _statusLabel(issue.status),
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
-                                                color: _statusColor(issue.status),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          TextButton.icon(
-                                            onPressed: () async {
-                                              final confirm = await showDialog<bool>(
-                                                context: context,
-                                                builder: (context) => AlertDialog(
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(16),
-                                                  ),
-                                                  title: const Text('Confirmar exclusão'),
-                                                  content: const Text(
-                                                    'Deseja realmente excluir este problema?',
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(context, false),
-                                                      child: const Text('Cancelar'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(context, true),
-                                                      style: TextButton.styleFrom(
-                                                        foregroundColor: Colors.red,
-                                                      ),
-                                                      child: const Text('Excluir'),
-                                                    ),
-                                                  ],
                                                 ),
-                                              );
-
-                                              if (confirm == true && issue.id != null) {
-                                                await _issueRepo.deleteIssue(issue.id!);
-                                                await _loadIssues();
-                                                if (mounted) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text('Problema excluído!'),
+                                              ),
+                                              if (issue.isAnonymous)
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 4,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey[200],
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.visibility_off,
+                                                        size: 14,
+                                                        color: Colors.grey[700],
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        'Anônimo',
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.grey[700],
+                                                          fontWeight: FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            issue.description,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: _statusColor(issue.status).withOpacity(0.15),
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: _statusColor(issue.status).withOpacity(0.3),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration: BoxDecoration(
+                                                    color: _statusColor(issue.status),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  _statusLabel(issue.status),
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: _statusColor(issue.status),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            children: [
+                                              TextButton.icon(
+                                                onPressed: () async {
+                                                  final confirm = await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (context) => AlertDialog(
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(16),
+                                                      ),
+                                                      title: const Text('Confirmar exclusão'),
+                                                      content: const Text(
+                                                        'Deseja realmente excluir este problema?',
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(context, false),
+                                                          child: const Text('Cancelar'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(context, true),
+                                                          style: TextButton.styleFrom(
+                                                            foregroundColor: Colors.red,
+                                                          ),
+                                                          child: const Text('Excluir'),
+                                                        ),
+                                                      ],
                                                     ),
                                                   );
-                                                }
-                                              }
-                                            },
-                                            icon: const Icon(Icons.delete_outline, size: 18),
-                                            label: const Text('Excluir'),
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: Colors.red[600],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          TextButton.icon(
-                                            onPressed: () => _showEditStatusDialog(issue),
-                                            icon: const Icon(Icons.edit_outlined, size: 18),
-                                            label: const Text('Editar Status'),
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: Colors.blue[700],
-                                            ),
+
+                                                  if (confirm == true && issue.id != null) {
+                                                    try {
+                                                      await _issueRepo.deleteIssue(issue.id!);
+                                                      await _loadIssues();
+                                                      if (mounted) {
+                                                        ScaffoldMessenger.of(context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text('Problema excluído!'),
+                                                          ),
+                                                        );
+                                                      }
+                                                    } catch (e) {
+                                                      if (mounted) {
+                                                        ScaffoldMessenger.of(context)
+                                                            .showSnackBar(
+                                                          SnackBar(
+                                                            content: Text('Erro ao excluir: $e'),
+                                                          ),
+                                                        );
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                icon: const Icon(Icons.delete_outline, size: 18),
+                                                label: const Text('Excluir'),
+                                                style: TextButton.styleFrom(
+                                                  foregroundColor: Colors.red[600],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              TextButton.icon(
+                                                onPressed: () => _showEditStatusDialog(issue),
+                                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                                label: const Text('Editar Status'),
+                                                style: TextButton.styleFrom(
+                                                  foregroundColor: Colors.blue[700],
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
     );
   }
 }

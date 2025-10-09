@@ -177,7 +177,16 @@ class _HomePageState extends State<HomePage> {
               children: [
                 _buildStyledButton(
                   context,
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.reportIssue),
+                  onPressed: () async {
+                    final userRepo = UserRepository();
+                    final isAuth = await userRepo.isAuthenticated();
+                    
+                    if (isAuth) {
+                      Navigator.pushNamed(context, AppRoutes.reportIssue);
+                    } else {
+                      _showLoginRequiredDialog(context);
+                    }
+                  },
                   icon: Icons.report_problem_outlined,
                   label: 'Relatar Problema',
                   color: Colors.blue[700]!,
@@ -210,6 +219,49 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showLoginRequiredDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.lock_outline, color: Colors.blue[700]),
+            const SizedBox(width: 12),
+            const Text('Login Necessário'),
+          ],
+        ),
+        content: const Text(
+          'Você precisa estar logado para fazer um relato normal. '
+          'Para relatos anônimos, use a opção "Relatar Problema Anônimo".',
+          style: TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, AppRoutes.login);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[700],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('Fazer Login'),
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_hackaton/db/database_helper.dart';
+import 'package:app_hackaton/db/user_repository.dart';
 
 class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
@@ -11,6 +12,7 @@ class EditProfile extends StatefulWidget {
 class _EditProfileState extends State<EditProfile> {
   final _formKey = GlobalKey<FormState>();
   final db = DatabaseHelper.instance;
+  final _userRepo = UserRepository();
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -26,50 +28,116 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _loadUserData() async {
-    final exists = await db.tableExists('users');
-    if (!exists) {
-      await db.execute('''CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT,
-          email TEXT,
-          password TEXT,
-          is_authenticated INTEGER DEFAULT 1
-        )
-      ''');
-    }
+    try {
+      final exists = await db.tableExists('users');
+      if (!exists) {
+        await db.execute('''CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT,
+            password TEXT,
+            is_authenticated INTEGER DEFAULT 1
+          )
+        ''');
+      }
 
-    final users = await db.query('users', where: 'is_authenticated = ?', whereArgs: [1]);
-    if (users.isNotEmpty) {
-      final user = users.first;
-      _userId = user['id'] as int;
-      _nameController.text = user['name'] ?? '';
-      _emailController.text = user['email'] ?? '';
-      _passwordController.text = user['password'] ?? '';
-    }
+      final users = await db.query('users', where: 'is_authenticated = ?', whereArgs: [1]);
+      if (users.isNotEmpty) {
+        final user = users.first;
+        _userId = user['id'] as int;
+        _nameController.text = user['name'] ?? '';
+        _emailController.text = user['email'] ?? '';
+        _passwordController.text = user['password'] ?? '';
+      }
 
-    setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar dados: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final data = {
-      'name': _nameController.text.trim(),
-      'email': _emailController.text.trim(),
-      'password': _passwordController.text.trim(),
-      'is_authenticated': 1,
-    };
+    try {
+      final data = {
+        'name': _nameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'password': _passwordController.text.trim(),
+        'is_authenticated': 1,
+      };
 
-    if (_userId != null) {
-      await db.update('users', data, where: 'id = ?', whereArgs: [_userId]);
-    } else {
-      await db.insert('users', data);
+      if (_userId != null) {
+        await db.update('users', data, where: 'id = ?', whereArgs: [_userId]);
+      } else {
+        await db.insert('users', data);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil salvo com sucesso!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar: $e')),
+        );
+      }
     }
+  }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perfil salvo com sucesso!')),
-      );
+  Future<void> _logout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text('Confirmar logout'),
+        content: const Text('Deseja realmente sair da sua conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await _userRepo.logout();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Logout realizado com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro ao fazer logout: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -273,6 +341,40 @@ class _EditProfileState extends State<EditProfile> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: _logout,
+                  icon: const Icon(Icons.logout, size: 22),
+                  label: const Text(
+                    'Sair da Conta',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[600],
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 56),
                     shape: RoundedRectangleBorder(
